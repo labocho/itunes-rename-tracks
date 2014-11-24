@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require_relative "itunes"
+puts get_names.join("\n")

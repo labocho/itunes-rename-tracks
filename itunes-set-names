@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+require_relative "itunes"
+old_names = get_names
+new_names = STDIN.read.chomp.split("\n")
+old_names.zip(new_names).each do |(old_name, new_name)|
+  puts "   #{old_name}\n-> #{new_name}"
+end
+
+print "Rename?: "
+if ARGV.include?("-y") || gets.chomp =~ /^y(es)?/i
+  set_names(new_names)
+  puts "done"
+end
