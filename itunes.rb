@@ -4,8 +4,8 @@ require "shellwords"
 require "open3"
 require "json"
 
-def osascript(script)
-  out, err, status = Open3.capture3("osascript", "-l", "JavaScript", "-e", script)
+def osascript(script, *args)
+  out, err, status = Open3.capture3("osascript", "-l", "JavaScript", "-e", script, *args)
   unless status.success?
     raise err
   end
@@ -14,29 +14,35 @@ end
 
 def get_names
   script = <<-JS
-  var itunes = Application("iTunes");
-  var selection = itunes.browserWindows[0].selection();
+  function run(argv) {
+    var itunes = Application("iTunes");
+    var selection = itunes.browserWindows[0].selection();
+    var names = [];
 
-  for (var i in selection) {
-    console.log(selection[i].name());
+    for (var i in selection) {
+      names.push(selection[i].name());
+    }
+
+    return JSON.stringify(names);
   }
   JS
 
   out, err, status = osascript(script)
-  err.chomp.split("\n")
+  JSON.parse(out)
 end
 
 def set_names(names)
   script = <<-JS
-  var itunes = Application("iTunes");
-  var selection = itunes.browserWindows[0].selection();
-  var names = #{names.to_json};
+  function run(argv) {
+    var itunes = Application("iTunes");
+    var selection = itunes.browserWindows[0].selection();
+    var names = JSON.parse(argv[0]);
 
-  for (var i in selection) {
-    selection[i].name = names[i];
+    for (var i in selection) {
+      selection[i].name = names[i];
+    }
   }
   JS
 
-  out, err, status = osascript(script)
-  err.chomp.split("\n")
+  out, err, status = osascript(script, names.to_json)
 end
